@@ -1,0 +1,52 @@
+# healproxy — systemd-Anwendungs-Unit (Benutzer-Unit).
+#
+# Installation:
+#   mkdir -p ~/.config/systemd/user
+#   cp healproxy.service.example ~/.config/systemd/user/healproxy.service
+#   $EDITOR ~/.config/systemd/user/healproxy.service     # Pfade anpassen
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now healproxy
+#   journalctl --user -u healproxy -f
+#
+# Der untere Hardening-Block ist HIER NICHT aktiv, weil wir ihn nicht gegen
+# unseren eigenen Betrieb getestet haben. Erst aktivieren, dann mit
+# `systemd-analyze security healproxy.service --user` und einem echten
+# Heal-Testlauf prüfen.
+
+[Unit]
+Description=healproxy — Markup-Healing und Namens-Sanitizer vor einem OpenAI-kompatiblen Backend (:8085 -> :8080)
+After=network.target
+
+[Service]
+Type=simple
+Environment=HEALPROXY_BIND=127.0.0.1
+Environment=HEALPROXY_PORT=8085
+Environment=HEALPROXY_TARGET_HOST=127.0.0.1
+Environment=HEALPROXY_TARGET_PORT=8080
+# Standard ist ~/tool/log-proxy/logs.
+Environment=HEALPROXY_DIR=%h/tool/log-proxy/logs
+# Request- und Response-Bodies enthalten Prompts und Modelltext: aus lassen.
+# Environment=HEALPROXY_REQ_LOG=0
+# Environment=HEALPROXY_RESP_LOG=0
+ExecStart=/usr/bin/python3 %h/tool/log-proxy/healproxy.py
+Restart=always
+RestartSec=2
+
+# --- optional, nicht von uns verifiziert -----------------------------------
+# NoNewPrivileges=yes
+# PrivateTmp=yes
+# ProtectSystem=strict
+# ProtectHome=read-only
+# BindReadOnlyPaths=%h/tool/log-proxy
+# CapabilityBoundingSet=
+# AmbientCapabilities=
+# LockPersonality=yes
+# MemoryDenyWriteExecute=yes
+# RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+# RestrictNamespaces=user
+# RestrictRealtime=yes
+# RestrictSUIDSGID=yes
+# SystemCallFilter=@system-service
+
+[Install]
+WantedBy=default.target
