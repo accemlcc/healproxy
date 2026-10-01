@@ -130,6 +130,19 @@ a healed call is a reconstruction. Read `logs/healed.jsonl` — the kinds are
 `sanitized-tool-names` — and prefer fixing the server prompt/template when you
 can.
 
+## Upstream status
+
+- The history poisoning described above is reported upstream as
+  [gufo-org/gufo#357](https://github.com/gufo-org/gufo/issues/357) (01.10.2026).
+- The prose-instead-of-`tool_calls` leak this proxy papers over is
+  [gufo-org/gufo#266](https://github.com/gufo-org/gufo/issues/266), still open.
+- The server-side name allowlist was widened for dotted and namespaced names in
+  [#314](https://github.com/gufo-org/gufo/pull/314) (shipped in 0.2.0). That
+  upstream set also tolerates `:` `/` `@`; `NAME_RE` here deliberately does not,
+  so a bridged tool named `ns:create_issue` gets rewritten by this proxy even
+  though the backend would accept it. Pinned by test `I2` — relax the pattern if
+  you need those names.
+
 ## License
 
 MIT — see `LICENSE`.
